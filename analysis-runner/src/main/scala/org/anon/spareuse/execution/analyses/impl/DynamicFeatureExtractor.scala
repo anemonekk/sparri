@@ -7,7 +7,7 @@ import org.anon.spareuse.core.model.{AnalysisData, SoftwareEntityKind}
 import org.anon.spareuse.core.model.entities.JavaEntities.JavaProgram
 import org.anon.spareuse.core.model.entities.SoftwareEntityData
 import org.anon.spareuse.core.opal.OPALProjectHelper
-import org.anon.spareuse.execution.analyses.impl.dynamicfeatures.{Classloading, DynamicProxy, MethodHandle, Unsafe}
+import org.anon.spareuse.execution.analyses.impl.dynamicfeatures.{Classloading, DynamicProxy, MethodHandle, Native, Serialization, Unsafe}
 import org.anon.spareuse.execution.analyses.{AnalysisImplementation, AnalysisImplementationDescriptor, AnalysisResult, FreshResult}
 import org.opalj.tac.cg.RTACallGraphKey
 
@@ -39,19 +39,21 @@ class DynamicFeatureExtractor extends AnalysisImplementation{
           val methodhandleBuilder: MethodHandle = new MethodHandle
           val unsafeBuilder: Unsafe = new Unsafe
           //val interfaceMethodsBuiler: InterfaceMethods = new InterfaceMethods
-          //val nativeBuilder: Native = new Native
+          val nativeBuilder: Native = new Native
+          val serializationBuilder: Serialization = new Serialization
 
           //val reflFeatures = reflBuilder.apply(project, cg)
           val classloadingFeatures = clBuilder.apply(project, cg)
           val dynamicProxyFeatures = dynProxBuilder.apply(project, cg)
           //val interfaceMethodsFeatures = interfaceMethodsBuiler.apply(project, cg)
           val methodhandleFeatures = methodhandleBuilder.apply(project, cg)
-          //val nativeFeatures = nativeBuilder.apply(project, cg)
+          val nativeFeatures = nativeBuilder.apply(project, cg)
           val unsafeFeatures = unsafeBuilder.apply(project, cg)
+          val serializationFeatures = serializationBuilder.apply(project, cg)
 
           val mergeFeatures = (/*reflFeatures ++*/ classloadingFeatures ++ dynamicProxyFeatures
-            /*++ interfaceMethodsFeatures*/ ++ methodhandleFeatures /*++ nativeFeatures*/
-            ++ unsafeFeatures).toList
+            /*++ interfaceMethodsFeatures*/ ++ methodhandleFeatures ++ nativeFeatures
+            ++ unsafeFeatures ++ serializationFeatures).toList
 
           Some(FreshResult(mergeFeatures, Set(program)))
         }
