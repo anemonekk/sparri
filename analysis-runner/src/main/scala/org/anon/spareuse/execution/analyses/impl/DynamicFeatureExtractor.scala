@@ -7,7 +7,7 @@ import org.anon.spareuse.core.model.{AnalysisData, SoftwareEntityKind}
 import org.anon.spareuse.core.model.entities.JavaEntities.JavaProgram
 import org.anon.spareuse.core.model.entities.SoftwareEntityData
 import org.anon.spareuse.core.opal.OPALProjectHelper
-import org.anon.spareuse.execution.analyses.impl.dynamicfeatures.{Classloading, DynamicProxy, InterfaceMethods, MethodHandle, Native, Serialization, Unsafe}
+import org.anon.spareuse.execution.analyses.impl.dynamicfeatures.{Classloading, DynamicProxy, InterfaceMethods, Invokedynamics, MethodHandle, Native, Serialization, Unsafe}
 import org.anon.spareuse.execution.analyses.{AnalysisImplementation, AnalysisImplementationDescriptor, AnalysisResult, FreshResult}
 import org.opalj.tac.cg.RTACallGraphKey
 
@@ -41,6 +41,7 @@ class DynamicFeatureExtractor extends AnalysisImplementation{
           val interfaceMethodsBuiler: InterfaceMethods = new InterfaceMethods
           val nativeBuilder: Native = new Native
           val serializationBuilder: Serialization = new Serialization
+          val invokedynamicsBuilder: Invokedynamics = new Invokedynamics
 
           //val reflFeatures = reflBuilder.apply(project, cg)
           val classloadingFeatures = clBuilder.apply(project, cg)
@@ -50,10 +51,11 @@ class DynamicFeatureExtractor extends AnalysisImplementation{
           val nativeFeatures = nativeBuilder.apply(project, cg)
           val unsafeFeatures = unsafeBuilder.apply(project, cg)
           val serializationFeatures = serializationBuilder.apply(project, cg)
+          val invokedynamicsFeatures = invokedynamicsBuilder.apply(project, cg)
 
           val mergeFeatures = (/*reflFeatures ++*/ classloadingFeatures ++ dynamicProxyFeatures
             ++ interfaceMethodsFeatures ++ methodhandleFeatures ++ nativeFeatures
-            ++ unsafeFeatures ++ serializationFeatures).toList
+            ++ unsafeFeatures ++ serializationFeatures ++ invokedynamicsFeatures).toList
 
           Some(FreshResult(mergeFeatures, Set(program)))
         }
