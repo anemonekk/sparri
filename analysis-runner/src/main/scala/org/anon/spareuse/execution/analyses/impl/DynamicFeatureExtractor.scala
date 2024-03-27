@@ -7,7 +7,7 @@ import org.anon.spareuse.core.model.{AnalysisData, SoftwareEntityKind}
 import org.anon.spareuse.core.model.entities.JavaEntities.JavaProgram
 import org.anon.spareuse.core.model.entities.SoftwareEntityData
 import org.anon.spareuse.core.opal.OPALProjectHelper
-import org.anon.spareuse.execution.analyses.impl.dynamicfeatures.{Classloading, DynamicProxy, InterfaceMethods, Invokedynamics, MethodHandle, Native, Serialization, Unsafe}
+import org.anon.spareuse.execution.analyses.impl.dynamicfeatures.{Classloading, DynamicProxy, InterfaceMethods, Invokedynamics, MethodHandle, Native, ReflectionFeature, Serialization, Unsafe}
 import org.anon.spareuse.execution.analyses.{AnalysisImplementation, AnalysisImplementationDescriptor, AnalysisResult, FreshResult}
 import org.opalj.tac.cg.RTACallGraphKey
 
@@ -34,7 +34,7 @@ class DynamicFeatureExtractor extends AnalysisImplementation{
           val cg = project.get(RTACallGraphKey)
 
           val clBuilder: Classloading = new Classloading
-          //val reflBuilder: ReflectionFeature = new ReflectionFeature
+          val reflBuilder: ReflectionFeature = new ReflectionFeature
           val dynProxBuilder: DynamicProxy = new DynamicProxy
           val methodhandleBuilder: MethodHandle = new MethodHandle
           val unsafeBuilder: Unsafe = new Unsafe
@@ -43,7 +43,7 @@ class DynamicFeatureExtractor extends AnalysisImplementation{
           val serializationBuilder: Serialization = new Serialization
           val invokedynamicsBuilder: Invokedynamics = new Invokedynamics
 
-          //val reflFeatures = reflBuilder.apply(project, cg)
+          val reflFeatures = reflBuilder.apply(project, cg)
           val classloadingFeatures = clBuilder.apply(project, cg)
           val dynamicProxyFeatures = dynProxBuilder.apply(project, cg)
           val interfaceMethodsFeatures = interfaceMethodsBuiler.apply(project, cg)
@@ -53,7 +53,7 @@ class DynamicFeatureExtractor extends AnalysisImplementation{
           val serializationFeatures = serializationBuilder.apply(project, cg)
           val invokedynamicsFeatures = invokedynamicsBuilder.apply(project, cg)
 
-          val mergeFeatures = (/*reflFeatures ++*/ classloadingFeatures ++ dynamicProxyFeatures
+          val mergeFeatures = (reflFeatures ++ classloadingFeatures ++ dynamicProxyFeatures
             ++ interfaceMethodsFeatures ++ methodhandleFeatures ++ nativeFeatures
             ++ unsafeFeatures ++ serializationFeatures ++ invokedynamicsFeatures).toList
 
