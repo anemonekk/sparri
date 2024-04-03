@@ -42,11 +42,9 @@ class InterfaceMethods {
                                 result += FeatureContainer("Interface Methods default invoke virtual", rm.method.name, rm.method.declaringClassType.fqn,
                                   pc, linenumber, caller._1.name, "", host.fqn, classFileVersion)
                               }
-
                             }
                           }
                         }
-
                     }
                   }
 
@@ -56,23 +54,24 @@ class InterfaceMethods {
                 case ini: INVOKEINTERFACE => {
                   if(ini.declaringClass.isObjectType){
                     val subtypes = project.classHierarchy.allSubtypes(ini.declaringClass.asObjectType, false)
+                    var isIDM = false
                     subtypes.map { ot =>
                       val target = project.instanceCall(rm.method.declaringClassType, ot, ini.name, ini.methodDescriptor)
                       if (target.hasValue) {
                         val defClass = target.value.asVirtualMethod.classType.asObjectType
-                        project.classFile(defClass).exists(_.isInterfaceDeclaration)
+                        isIDM = project.classFile(defClass).exists(_.isInterfaceDeclaration)
 
                         if (project.classFile(defClass).isDefined) {
                           if (target.value.body.isDefined && target.value.isPublic) {
-                            result += FeatureContainer("Interface Methods default invoke interface", rm.method.name, rm.method.declaringClassType.fqn,
-                              pc, linenumber, caller._1.name, "", host.fqn, classFileVersion)
+                            if(isIDM){
+                              result += FeatureContainer("Interface Methods default invoke interface", rm.method.name, rm.method.declaringClassType.fqn,
+                                pc, linenumber, caller._1.name, "", host.fqn, classFileVersion)
+                            }
                           }
                         }
-
                       }
                     }
                   }
-
                 }
                 case ins: INVOKESTATIC => {
                   if (ins.isInterface) {

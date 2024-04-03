@@ -114,7 +114,16 @@ class ReflectionFeature {
                 val paramTypes = call.asVirtualFunctionCall.params(1).asVar.value
                 if (paramTypes.asReferenceValue.allValues.exists { v =>
                   // unsure about both variants
-                  v.isNull.isNoOrUnknown || v.asInstanceOf[ArrayValues#DomainArrayValue].length.contains(0)
+                  v.isNull.isNoOrUnknown
+                }) {
+                  result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
+                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                }
+                if (paramTypes.asReferenceValue.allValues.exists { v =>
+                  if(v.isNull.isNoOrUnknown){
+                    v.asInstanceOf[ArrayValues#DomainArrayValue].length.contains(0)
+                  }
+                  else{v.isNull.isNo}
                 }) {
                   result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
                     pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
@@ -424,34 +433,38 @@ class ReflectionFeature {
                               case InstanceOf.ASTID | Compare.ASTID => false
                               case _ => nonLocalCallInProject(FieldType, "get", project)
                             }
+                          case _ => false
                         }
                     }
                 }
 
-                val definedBy = call.params.head.asVar.definedBy
-                if (stmt.astID == Assignment.ASTID && fieldGetUsedForInvocation) {
-                  // check if param trivial string constant
-                  if (simpleDefinition(definedBy, body).exists(_.expr.isConst)) {
-                    result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                      pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
-                  }
-                  else {
-                    definedBy.foreach { defSite =>
-                      if (defSite < 0) {
-                        // need to check with custom test case
-                        result += FeatureContainer("Non-Trivial Reflection (user input (only?))", r.method.name, r.method.declaringClassType.fqn,
-                          pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                if(!call.params.isEmpty){
+                  val definedBy = call.params.head.asVar.definedBy
+                  if (stmt.astID == Assignment.ASTID && fieldGetUsedForInvocation) {
+                    // check if param trivial string constant
+                    if (simpleDefinition(definedBy, body).exists(_.expr.isConst)) {
+                      result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
+                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                    }
+                    else {
+                      definedBy.foreach { defSite =>
+                        if (defSite < 0) {
+                          // need to check with custom test case
+                          result += FeatureContainer("Non-Trivial Reflection (user input (only?))", r.method.name, r.method.declaringClassType.fqn,
+                            pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                        }
                       }
+                    }
+                  }
+
+                  else {
+                    if (stmt.astID == Assignment.ASTID && fieldGetUsedForNonDirectInvocation) {
+                      result += FeatureContainer("Non-Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
+                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
                     }
                   }
                 }
 
-                else {
-                  if (stmt.astID == Assignment.ASTID && fieldGetUsedForNonDirectInvocation) {
-                    result += FeatureContainer("Non-Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                      pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
-                  }
-                }
               }
             }
 
@@ -528,53 +541,48 @@ class ReflectionFeature {
             if (index != -1) {
               val stmt = tacApplied.stmts(index)
 
-              val call: FunctionCall[V] = {
-                if (stmt.isAssignment) {
-                  stmt.asAssignment.expr.asFunctionCall
-                }
-                else {
-                  stmt.asExprStmt.expr.asFunctionCall
-                }
-              }
-
               var checkFieldUsedDirectly = false
               var fieldUsedForNonDirectInvocation = false
-              checkFieldUsedDirectly = if (stmt.asAssignment.targetVar.usedBy.exists {
-                innerUseSite =>
-                  val stmtUse = body(innerUseSite)
-                  stmt.astID match {
-                    case VirtualMethodCall.ASTID =>
-                      stmt.asVirtualMethodCall.receiver.asVar.definedBy.contains(pc)
-                    case Assignment.ASTID =>
-                      stmt.asAssignment.expr.isVirtualFunctionCall &&
-                        stmt.asAssignment.expr.asVirtualFunctionCall.receiver.asVar.definedBy.contains(pc)
-                    case ExprStmt.ASTID =>
-                      stmt.asExprStmt.expr.isVirtualFunctionCall &&
-                        stmt.asExprStmt.expr.asVirtualFunctionCall.receiver.asVar.definedBy.contains(pc)
-                    case _ => false
-                  }
-              }) {
-                true
-              } else false
+              if(stmt.isAssignment){
+                checkFieldUsedDirectly = if (stmt.asAssignment.targetVar.usedBy.exists {
+                  innerUseSite =>
+                    val stmtUse = body(innerUseSite)
+                    stmt.astID match {
+                      case VirtualMethodCall.ASTID =>
+                        stmt.asVirtualMethodCall.receiver.asVar.definedBy.contains(pc)
+                      case Assignment.ASTID =>
+                        stmt.asAssignment.expr.isVirtualFunctionCall &&
+                          stmt.asAssignment.expr.asVirtualFunctionCall.receiver.asVar.definedBy.contains(pc)
+                      case ExprStmt.ASTID =>
+                        stmt.asExprStmt.expr.isVirtualFunctionCall &&
+                          stmt.asExprStmt.expr.asVirtualFunctionCall.receiver.asVar.definedBy.contains(pc)
+                      case _ => false
+                    }
+                }) {
+                  true
+                } else false
+              }
 
               // value escaped
-              fieldUsedForNonDirectInvocation =
-                stmt.asAssignment.targetVar.usedBy.exists {
-                  useSite =>
-                    val stmt = body(useSite)
-                    stmt.astID match {
-                      case PutField.ASTID => stmt.asPutField.value.asVar.definedBy.contains(pc)
-                      case ArrayStore.ASTID => stmt.asArrayStore.value.asVar.definedBy.contains(pc)
-                      case Assignment.ASTID =>
-                        stmt.asAssignment.expr.astID match {
-                          case InstanceOf.ASTID | Compare.ASTID | GetField.ASTID |
-                               ArrayLoad.ASTID => false
-                          case _ => true
-                        }
-                      case MonitorEnter.ASTID | MonitorExit.ASTID | If.ASTID | Checkcast.ASTID => false
-                      case _ => true
-                    }
-                }
+              if(stmt.isAssignment){
+                fieldUsedForNonDirectInvocation =
+                  stmt.asAssignment.targetVar.usedBy.exists {
+                    useSite =>
+                      val stmt = body(useSite)
+                      stmt.astID match {
+                        case PutField.ASTID => stmt.asPutField.value.asVar.definedBy.contains(pc)
+                        case ArrayStore.ASTID => stmt.asArrayStore.value.asVar.definedBy.contains(pc)
+                        case Assignment.ASTID =>
+                          stmt.asAssignment.expr.astID match {
+                            case InstanceOf.ASTID | Compare.ASTID | GetField.ASTID |
+                                 ArrayLoad.ASTID => false
+                            case _ => true
+                          }
+                        case MonitorEnter.ASTID | MonitorExit.ASTID | If.ASTID | Checkcast.ASTID => false
+                        case _ => true
+                      }
+                  }
+              }
 
               if (stmt.astID == Assignment.ASTID && checkFieldUsedDirectly) {
                 result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,

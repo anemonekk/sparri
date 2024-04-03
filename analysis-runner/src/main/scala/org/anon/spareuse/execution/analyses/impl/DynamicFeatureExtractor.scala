@@ -7,7 +7,7 @@ import org.anon.spareuse.core.model.{AnalysisData, SoftwareEntityKind}
 import org.anon.spareuse.core.model.entities.JavaEntities.JavaProgram
 import org.anon.spareuse.core.model.entities.SoftwareEntityData
 import org.anon.spareuse.core.opal.OPALProjectHelper
-import org.anon.spareuse.execution.analyses.impl.dynamicfeatures.{Classloading, DynamicProxy, InterfaceMethods, Invokedynamics, MethodHandle, Native, ReflectionFeature, Serialization, Unsafe}
+import org.anon.spareuse.execution.analyses.impl.dynamicfeatures.{Classloading, DynamicProxy, InterfaceMethods, Invokedynamics, MethodHandle, Native, ReflectionFeature, Serialization, StaticInitializer, Unsafe}
 import org.anon.spareuse.execution.analyses.{AnalysisImplementation, AnalysisImplementationDescriptor, AnalysisResult, FreshResult}
 import org.opalj.tac.cg.RTACallGraphKey
 
@@ -42,6 +42,7 @@ class DynamicFeatureExtractor extends AnalysisImplementation{
           val nativeBuilder: Native = new Native
           val serializationBuilder: Serialization = new Serialization
           val invokedynamicsBuilder: Invokedynamics = new Invokedynamics
+          val staticinitializerBuilder: StaticInitializer = new StaticInitializer
 
           val reflFeatures = reflBuilder.apply(project, cg)
           val classloadingFeatures = clBuilder.apply(project, cg)
@@ -52,10 +53,12 @@ class DynamicFeatureExtractor extends AnalysisImplementation{
           val unsafeFeatures = unsafeBuilder.apply(project, cg)
           val serializationFeatures = serializationBuilder.apply(project, cg)
           val invokedynamicsFeatures = invokedynamicsBuilder.apply(project, cg)
+          val staticInitializerFeatures = staticinitializerBuilder.apply(project, cg)
 
           val mergeFeatures = (reflFeatures ++ classloadingFeatures ++ dynamicProxyFeatures
             ++ interfaceMethodsFeatures ++ methodhandleFeatures ++ nativeFeatures
-            ++ unsafeFeatures ++ serializationFeatures ++ invokedynamicsFeatures).toList
+            ++ unsafeFeatures ++ serializationFeatures ++ invokedynamicsFeatures ++
+            staticInitializerFeatures).toList
 
           Some(FreshResult(mergeFeatures, Set(program)))
         }

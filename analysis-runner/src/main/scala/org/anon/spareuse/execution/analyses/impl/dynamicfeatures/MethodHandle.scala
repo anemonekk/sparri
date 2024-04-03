@@ -10,15 +10,15 @@ class MethodHandle {
 
   val LookupType = ObjectType.MethodHandles$Lookup
   val MethodHandleType = ObjectType.MethodHandle
-  val LUFindStatic = "findStatic"
-  val MHInvokeExact = "invokeExact"
-  val LUFindVirtual = "findVirtual"
+  val LUFindStatic = "findStatic" // Lookup
+  val MHInvokeExact = "invokeExact" // MethodHandle
+  val LUFindVirtual = "findVirtual" // Lookup
   val LUFindConstructor = "findConstructor"
   val LUFindStaticGetter = "findStaticGetter"
   val LUFindGetter = "findGetter"
   val LUFindSpecial = "findSpecial"
-  val MHInvoke = "invoke"
-  val MHInvokeArguments = "invokeWithArguments"
+  val MHInvoke = "invoke" // MethodHandle
+  val MHInvokeArguments = "invokeWithArguments" // MethodHandle
 
   var result: Set[FeatureContainer] = Set.empty
 
