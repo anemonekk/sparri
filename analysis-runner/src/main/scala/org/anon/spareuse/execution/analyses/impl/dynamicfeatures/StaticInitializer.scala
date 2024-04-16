@@ -22,7 +22,7 @@ class StaticInitializer {
 
         val si = cf.staticInitializer.get
 
-        result += FeatureContainer("Static Initializer", si.name, si.descriptor.toString(), 1, 1, "static methods: " + staticMethods, "", si.classFile.fqn, si.classFile.jdkVersion)
+        result += FeatureContainer("Static Initializer", si.name, si.descriptor.toString(), 1, 1, "static methods: " + staticMethods, "", si.classFile.fqn, si.classFile.jdkVersion, cg.reachableMethods().size)
       }
     }
     result

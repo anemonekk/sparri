@@ -54,13 +54,13 @@ class Serialization {
 
                 if (project.classHierarchy.isSubtypeOf(param.asReferenceType, ObjectType.Externalizable)) {
                   result += FeatureContainer("Serialization Externalizable", rm.method.name, rm.method.declaringClassType.fqn,
-                    pc, linenumber, caller._1.name, "", "", classFileVersion)
+                    pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
                 }
 
                 if (!project.classHierarchy.isSubtypeOf(
                   param.asReferenceType, ObjectType.Externalizable)) {
                   result += FeatureContainer("Serialization", rm.method.name, rm.method.declaringClassType.fqn,
-                    pc, linenumber, caller._1.name, "", "", classFileVersion)
+                    pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
                 }
               }
             }
@@ -102,12 +102,12 @@ class Serialization {
                     }
                   }) {
                     result += FeatureContainer("Serialization", rm.method.name, rm.method.declaringClassType.fqn,
-                      pc, linenumber, caller._1.name, "", "", classFileVersion)
+                      pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
                   }
 
                   else if (externalizableTypes.nonEmpty) {
                     result += FeatureContainer("Serialization Externalizable", rm.method.name, rm.method.declaringClassType.fqn,
-                      pc, linenumber, caller._1.name, "", "", classFileVersion)
+                      pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
                   }
                 }
               }
@@ -134,7 +134,7 @@ class Serialization {
 
                 if (invocation.astID == VirtualMethodCall.ASTID) {
                   result += FeatureContainer("Serialization", rm.method.name, rm.method.declaringClassType.fqn,
-                    pc, linenumber, caller._1.name, "", "", classFileVersion)
+                    pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
                 }
               }
             }

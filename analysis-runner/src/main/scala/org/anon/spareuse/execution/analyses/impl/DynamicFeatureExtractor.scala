@@ -84,7 +84,8 @@ object DynamicFeatureExtractor extends AnalysisImplementationDescriptor {
         NamedPropertyFormat("caller", formats.StringFormat),
         NamedPropertyFormat("params", formats.StringFormat),
         NamedPropertyFormat("hostClass", formats.StringFormat),
-        NamedPropertyFormat("classFileVersion", formats.StringFormat)
+        NamedPropertyFormat("classFileVersion", formats.StringFormat),
+        NamedPropertyFormat("reachableMethods", formats.NumberFormat)
       )
     )
   )

@@ -39,7 +39,7 @@ class MethodHandle {
               val pc = caller._2
               val linenumber = caller._1.definedMethod.body.get.lineNumber(pc).get
               result += FeatureContainer("MH", rm.method.name, rm.method.declaringClassType.fqn,
-                pc, linenumber, caller._1.name, "", "", classFileVersion)
+                pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
             }
 
           case _ =>

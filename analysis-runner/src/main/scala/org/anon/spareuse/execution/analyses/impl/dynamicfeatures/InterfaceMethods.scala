@@ -40,7 +40,7 @@ class InterfaceMethods {
                             if (target.value.body.isDefined && target.value.isPublic) {
                               if (isIDM) {
                                 result += FeatureContainer("Interface Methods default invoke virtual", rm.method.name, rm.method.declaringClassType.fqn,
-                                  pc, linenumber, caller._1.name, "", host.fqn, classFileVersion)
+                                  pc, linenumber, caller._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
                               }
                             }
                           }
@@ -65,7 +65,7 @@ class InterfaceMethods {
                           if (target.value.body.isDefined && target.value.isPublic) {
                             if(isIDM){
                               result += FeatureContainer("Interface Methods default invoke interface", rm.method.name, rm.method.declaringClassType.fqn,
-                                pc, linenumber, caller._1.name, "", host.fqn, classFileVersion)
+                                pc, linenumber, caller._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
                             }
                           }
                         }
@@ -76,7 +76,7 @@ class InterfaceMethods {
                 case ins: INVOKESTATIC => {
                   if (ins.isInterface) {
                     result += FeatureContainer("Interface Methods static invoke static", rm.method.name, rm.method.declaringClassType.fqn,
-                      pc, linenumber, caller._1.name, "", host.fqn, classFileVersion)
+                      pc, linenumber, caller._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
                   }
                 }
                 case _ =>

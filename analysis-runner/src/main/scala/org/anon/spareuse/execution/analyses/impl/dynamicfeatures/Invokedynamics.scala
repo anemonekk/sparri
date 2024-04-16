@@ -66,7 +66,7 @@ class Invokedynamics {
                       val bm = in.bootstrapMethod
                       val handle = bm.arguments(1).asInstanceOf[MethodCallMethodHandle]
                       result += FeatureContainer("Invokedynamics Lambda", rm.method.name, rm.method.declaringClassType.fqn,
-                        pc, linenumber, caller._1.name, "instruction name: " + in.name + "  and handle name: " + handle.name, host.fqn, classFileVersion)
+                        pc, linenumber, caller._1.name, "instruction name: " + in.name + "  and handle name: " + handle.name, host.fqn, classFileVersion, cg.reachableMethods().size)
                     }
 
                     else if (isJava8LikeLambdaExpression(in)) {
@@ -77,14 +77,14 @@ class Invokedynamics {
                       if (descriptor == MethodDescriptor.LambdaAltMetafactoryDescriptor &&
                         name == "altMetafactory") {
                         result += FeatureContainer("Invokedynamics Lambda", rm.method.name, rm.method.declaringClassType.fqn,
-                          pc, linenumber, caller._1.name, "instruction name: " + in.name + " and handle name: " + handle.name, host.fqn, classFileVersion)
+                          pc, linenumber, caller._1.name, "instruction name: " + in.name + " and handle name: " + handle.name, host.fqn, classFileVersion, cg.reachableMethods().size)
                       }
                       // for Lambda-related, some cases may be missing
 
                       handle.referenceKind match {
                         case REF_invokeInterface | REF_invokeVirtual | REF_newInvokeSpecial =>
                           result += FeatureContainer("Invokedynamics MethodReferences", rm.method.name, rm.method.declaringClassType.fqn,
-                            pc, linenumber, caller._1.name, "instruction name: " + in.name + " and handle name: " + handle.name, host.fqn, classFileVersion)
+                            pc, linenumber, caller._1.name, "instruction name: " + in.name + " and handle name: " + handle.name, host.fqn, classFileVersion, cg.reachableMethods().size)
                         case REF_invokeStatic => {
                           val InvokeStaticMethodHandle(_, _, name, methodDes) = handle
                           val localMethod = caller._1.definedMethod.classFile.findMethod(name, methodDes)
@@ -93,17 +93,17 @@ class Invokedynamics {
                             if (callee.isStatic) {
                               if (callee.isSynthetic) {
                                 result += FeatureContainer("Invokedynamics Lambda", rm.method.name, rm.method.declaringClassType.fqn,
-                                  pc, linenumber, caller._1.name, "instruction name: " + in.name + " and handle name: " + handle.name, host.fqn, classFileVersion)
+                                  pc, linenumber, caller._1.name, "instruction name: " + in.name + " and handle name: " + handle.name, host.fqn, classFileVersion, cg.reachableMethods().size)
                               }
                               else {
                                 result += FeatureContainer("Invokedynamics MethodReferences", rm.method.name, rm.method.declaringClassType.fqn,
-                                  pc, linenumber, caller._1.name, "instruction name: " + in.name + "  and handle name: " + handle.name, host.fqn, classFileVersion)
+                                  pc, linenumber, caller._1.name, "instruction name: " + in.name + "  and handle name: " + handle.name, host.fqn, classFileVersion, cg.reachableMethods().size)
                               }
                             }
                           }
                           else {
                             result += FeatureContainer("Invokedynamics Lambda", rm.method.name, rm.method.declaringClassType.fqn,
-                              pc, linenumber, caller._1.name, "instruction name: " + in.name + "  and handle name: " + handle.name, host.fqn, classFileVersion)
+                              pc, linenumber, caller._1.name, "instruction name: " + in.name + "  and handle name: " + handle.name, host.fqn, classFileVersion, cg.reachableMethods().size)
                           }
                         }
                         case REF_invokeSpecial => {
@@ -111,7 +111,7 @@ class Invokedynamics {
                           val localMethod = caller._1.definedMethod.classFile.findMethod(name, methodDes)
                           if (localMethod.isDefined) {
                             result += FeatureContainer("Invokedynamics MethodReferences", rm.method.name, rm.method.declaringClassType.fqn,
-                              pc, linenumber, caller._1.name, "instruction name: " + in.name + "  and handle name: " + handle.name, host.fqn, classFileVersion)
+                              pc, linenumber, caller._1.name, "instruction name: " + in.name + "  and handle name: " + handle.name, host.fqn, classFileVersion, cg.reachableMethods().size)
                           }
                         }
                         case _ =>
@@ -122,7 +122,7 @@ class Invokedynamics {
                       val bm = in.bootstrapMethod
                       val handle = bm.arguments(1).asInstanceOf[MethodCallMethodHandle]
                       result += FeatureContainer("Invokedynamics Other", rm.method.name, rm.method.declaringClassType.fqn,
-                        pc, linenumber, caller._1.name, "instruction name: " + in.name + "  and handle name: " + handle.name, host.fqn, classFileVersion)
+                        pc, linenumber, caller._1.name, "instruction name: " + in.name + "  and handle name: " + handle.name, host.fqn, classFileVersion, cg.reachableMethods().size)
                     }
                   case _ =>
                 })

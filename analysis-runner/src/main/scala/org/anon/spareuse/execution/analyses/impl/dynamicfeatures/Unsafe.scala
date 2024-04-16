@@ -28,7 +28,7 @@ class Unsafe {
               val pc = caller._2
               val linenumber = caller._1.definedMethod.body.get.lineNumber(pc).get
               result += FeatureContainer("Unsafe CAS", rm.method.name, rm.method.declaringClassType.fqn,
-                pc, linenumber, caller._1.name, "", "", classFileVersion)
+                pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
             }
            }
 
@@ -42,7 +42,7 @@ class Unsafe {
               val pc = caller._2
               val linenumber = caller._1.definedMethod.body.get.lineNumber(pc).get
               result += FeatureContainer("Unsafe Heap", rm.method.name, rm.method.declaringClassType.fqn,
-                pc, linenumber, caller._1.name, "", "", classFileVersion)
+                pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
             }
           }
 
@@ -53,7 +53,7 @@ class Unsafe {
               val pc = caller._2
               val linenumber = caller._1.definedMethod.body.get.lineNumber(pc).get
               result += FeatureContainer("Unsafe FetchAndAdd", rm.method.name, rm.method.declaringClassType.fqn,
-                pc, linenumber, caller._1.name, "", "", classFileVersion)
+                pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
             }
           }
 
@@ -64,7 +64,7 @@ class Unsafe {
               val pc = caller._2
               val linenumber = caller._1.definedMethod.body.get.lineNumber(pc).get
               result += FeatureContainer("Unsafe OrderedPut", rm.method.name, rm.method.declaringClassType.fqn,
-                pc, linenumber, caller._1.name, "", "", classFileVersion)
+                pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
             }
           }
 
@@ -75,7 +75,7 @@ class Unsafe {
               val pc = caller._2
               val linenumber = caller._1.definedMethod.body.get.lineNumber(pc).get
               result += FeatureContainer("Unsafe Volatile", rm.method.name, rm.method.declaringClassType.fqn,
-                pc, linenumber, caller._1.name, "", "", classFileVersion)
+                pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
             }
           }
 
@@ -86,7 +86,7 @@ class Unsafe {
               val pc = caller._2
               val linenumber = caller._1.definedMethod.body.get.lineNumber(pc).get
               result += FeatureContainer("Unsafe Alloc", rm.method.name, rm.method.declaringClassType.fqn,
-                pc, linenumber, caller._1.name, "", "", classFileVersion)
+                pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
             }
           }
 
@@ -97,7 +97,7 @@ class Unsafe {
               val pc = caller._2
               val linenumber = caller._1.definedMethod.body.get.lineNumber(pc).get
               result += FeatureContainer("Unsafe Fence", rm.method.name, rm.method.declaringClassType.fqn,
-                pc, linenumber, caller._1.name, "", "", classFileVersion)
+                pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
             }
           }
 
@@ -108,7 +108,7 @@ class Unsafe {
               val pc = caller._2
               val linenumber = caller._1.definedMethod.body.get.lineNumber(pc).get
               result += FeatureContainer("Unsafe Class", rm.method.name, rm.method.declaringClassType.fqn,
-                pc, linenumber, caller._1.name, "", "", classFileVersion)
+                pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
             }
           }
         case _ =>

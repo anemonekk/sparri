@@ -48,13 +48,13 @@ class ReflectionFeature {
     implicit val tac: Method => TACode[TACMethodParameter, V] =
       project.get(LazyTACUsingAIKey)
 
-    val tmpfeature1 = FeatureContainer("TR0", "name", "declClass", 3, 3, "caller name", "", "", "")
-    val tmpfeature2 = FeatureContainer("TR0", "name2", "", 4, 4, "", "", "", "")
+    val tmpfeature1 = FeatureContainer("TR0", "name", "declClass", 3, 3, "caller name", "", "", "", cg.reachableMethods().size)
+    val tmpfeature2 = FeatureContainer("TR0", "name2", "", 4, 4, "", "", "", "", cg.reachableMethods().size)
     //val tmpfeature1 = Seq("TR0", "name", 3)
     result += tmpfeature1
     result += tmpfeature2
 
-    for (r <- cg.reachableMethods()) {
+    for (r <- cg.reachableMethods()) {   //TODO
 
       (r.method.declaringClassType.fqn /*: @switch*/) match {
         case MethodType.fqn => r.method.name match {
@@ -103,7 +103,7 @@ class ReflectionFeature {
 
                   countTrivialRefl += 1
                   result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
                 }
                 else {
                   //result += FeatureContainer("Trivial Reflection", r.method.name, pc, linenumber)
@@ -117,7 +117,7 @@ class ReflectionFeature {
                   v.isNull.isNoOrUnknown
                 }) {
                   result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
                 }
                 if (paramTypes.asReferenceValue.allValues.exists { v =>
                   if(v.isNull.isNoOrUnknown){
@@ -126,7 +126,7 @@ class ReflectionFeature {
                   else{v.isNull.isNo}
                 }) {
                   result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
                 }
               }
             }
@@ -153,7 +153,7 @@ class ReflectionFeature {
 
                 if (stmt.isVirtualMethodCall) {
                   result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
                 }
               }
             }
@@ -170,7 +170,7 @@ class ReflectionFeature {
 
 
               result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
             }
           }
           case "setAccessible" => {}
@@ -185,7 +185,7 @@ class ReflectionFeature {
               val linenumber = y._1.definedMethod.body.get.lineNumber(pc).get
               val host = y._1.definedMethod.classFile
               result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
             }
           }
 
@@ -225,63 +225,71 @@ class ReflectionFeature {
                 // check invoke called directly
                 var getMethodDirectInvoke = false
                 var methodUsedForNonDirectInvocation = false
-                if (stmt.asAssignment.targetVar.usedBy.exists { useSite =>
-                  val stmt = body(useSite)
-                  stmt.astID match {
-                    case Assignment.ASTID =>
-                      stmt.asAssignment.expr.isVirtualFunctionCall &&
-                        stmt.asAssignment.expr.asVirtualFunctionCall.name == "invoke"
-                    case ExprStmt.ASTID =>
-                      stmt.asExprStmt.expr.isVirtualFunctionCall &&
-                        stmt.asExprStmt.expr.asVirtualFunctionCall.name == "invoke"
-                    case _ => false
-                  }
-                }) {
-                  getMethodDirectInvoke = true
-                }
-
-                else {
-                  methodUsedForNonDirectInvocation =
-                    stmt.asAssignment.targetVar.usedBy.exists { useSite =>
-                      val stmt = body(useSite)
-                      stmt.astID match {
-                        case VirtualMethodCall.ASTID | NonVirtualMethodCall.ASTID | StaticMethodCall.ASTID =>
-                          if (stmt.asAssignment.expr.asFunctionCall.params.exists(_.asVar.definedBy.contains(index))
-                            && nonLocalCallInProject(MethodType, "invoke", project)) {
-                            true
-                          }
-                          else
-                            false
-                        case Assignment.ASTID =>
-                          stmt.asAssignment.expr.astID match {
-                            case VirtualFunctionCall.ASTID | NonVirtualMethodCall.ASTID | StaticFunctionCall.ASTID =>
-                              if (stmt.asAssignment.expr.asFunctionCall.params.exists(_.asVar.definedBy.contains(index))
-                                && nonLocalCallInProject(MethodType, "invoke", project)) {
-                                true
-                              } else {
-                                false
-                              }
-                            case InstanceOf.ASTID | Compare.ASTID => false
-                            case _ => nonLocalCallInProject(MethodType, "invoke", project)
-                          }
-                        case ExprStmt.ASTID =>
-                          stmt.asExprStmt.expr.astID match {
-                            case VirtualFunctionCall.ASTID | NonVirtualFunctionCall.ASTID | StaticFunctionCall.ASTID =>
-                              // mayUse mayUse(stmt.asExprStmt.expr.asFunctionCall.params, pc)
-                              if (stmt.asExprStmt.expr.asFunctionCall.params.exists(_.asVar.definedBy.contains(index))
-                                && nonLocalCallInProject(MethodType, "invoke", project)) {
-                                true
-                              }
-                              else
-                                false
-                            case InstanceOf.ASTID | Compare.ASTID => false
-                            case _ => nonLocalCallInProject(MethodType, "invoke", project)
-
-                          }
-                        case MonitorEnter.ASTID | MonitorExit.ASTID | If.ASTID | Checkcast.ASTID => false
-                        case _ => nonLocalCallInProject(MethodType, "invoke", project)
-                      }
+                if(stmt.isAssignment){
+                  if (stmt.asAssignment.targetVar.usedBy.exists { useSite =>
+                    val stmt = body(useSite)
+                    stmt.astID match {
+                      case Assignment.ASTID =>
+                        stmt.asAssignment.expr.isVirtualFunctionCall &&
+                          stmt.asAssignment.expr.asVirtualFunctionCall.name == "invoke"
+                      case ExprStmt.ASTID =>
+                        stmt.asExprStmt.expr.isVirtualFunctionCall &&
+                          stmt.asExprStmt.expr.asVirtualFunctionCall.name == "invoke"
+                      case _ => false
                     }
+                  }) {
+                    getMethodDirectInvoke = true
+                  }
+
+                  else {
+                    if(stmt.asAssignment.targetVar != null){
+                      methodUsedForNonDirectInvocation =
+                        stmt.asAssignment.targetVar.usedBy.exists { useSite =>
+                          val stmt = body(useSite)
+                          stmt.astID match {
+                            case VirtualMethodCall.ASTID | NonVirtualMethodCall.ASTID | StaticMethodCall.ASTID =>
+                              if (stmt.asAssignment.expr.isFunctionCall) {
+                                if (stmt.asAssignment.expr.asFunctionCall.params.exists(_.asVar.definedBy.contains(index))
+                                  && nonLocalCallInProject(MethodType, "invoke", project)) {
+                                  true
+                                }
+                                else
+                                  false
+                              }
+                              else false
+
+                            case Assignment.ASTID =>
+                              stmt.asAssignment.expr.astID match {
+                                case VirtualFunctionCall.ASTID | NonVirtualMethodCall.ASTID | StaticFunctionCall.ASTID =>
+                                  if (stmt.asAssignment.expr.asFunctionCall.params.exists(_.asVar.definedBy.contains(index))
+                                    && nonLocalCallInProject(MethodType, "invoke", project)) {
+                                    true
+                                  } else {
+                                    false
+                                  }
+                                case InstanceOf.ASTID | Compare.ASTID => false
+                                case _ => nonLocalCallInProject(MethodType, "invoke", project)
+                              }
+                            case ExprStmt.ASTID =>
+                              stmt.asExprStmt.expr.astID match {
+                                case VirtualFunctionCall.ASTID | NonVirtualFunctionCall.ASTID | StaticFunctionCall.ASTID =>
+                                  // mayUse mayUse(stmt.asExprStmt.expr.asFunctionCall.params, pc)
+                                  if (stmt.asExprStmt.expr.asFunctionCall.params.exists(_.asVar.definedBy.contains(index))
+                                    && nonLocalCallInProject(MethodType, "invoke", project)) {
+                                    true
+                                  }
+                                  else
+                                    false
+                                case InstanceOf.ASTID | Compare.ASTID => false
+                                case _ => nonLocalCallInProject(MethodType, "invoke", project)
+
+                              }
+                            case MonitorEnter.ASTID | MonitorExit.ASTID | If.ASTID | Checkcast.ASTID => false
+                            case _ => nonLocalCallInProject(MethodType, "invoke", project)
+                          }
+                        }
+                    }
+                  }
                 }
 
                 if (stmt.astID == Assignment.ASTID && getMethodDirectInvoke) {
@@ -290,20 +298,20 @@ class ReflectionFeature {
                   // check if param trivial string constant
                   if (simpleDefinition(definedBy, body).exists(_.expr.isConst)) {
                     result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                      pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                      pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
                   }
                   else {
                     definedBy.foreach { defSite =>
                       if (defSite < 0) {
                         result += FeatureContainer("Non-Trivial Reflection (user input(only?))", r.method.name, r.method.declaringClassType.fqn,
-                          pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                          pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
                       } else { // maybe irrelevant?
                         //val definitionExpr = body(defSite).asAssignment.expr
                         //if (definitionExpr.isConst) {
                         // test case LRR1, multiple constants
                         //roughly say non-trivial, maybe enhance later
                         result += FeatureContainer("Non-Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                          pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                          pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
                         //}
                       }
                     }
@@ -311,7 +319,7 @@ class ReflectionFeature {
                 }
                 else if (stmt.astID == Assignment.ASTID && methodUsedForNonDirectInvocation) {
                   result += FeatureContainer("Non-Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
                 }
               }
             }
@@ -373,7 +381,7 @@ class ReflectionFeature {
                         stmtUse.asAssignment.expr.isVirtualFunctionCall &&
                           stmtUse.asAssignment.expr.asVirtualFunctionCall.name == "get" &&
                           checkFieldUsedDirectly
-                      }
+                      }  //TODO
 
                       case ExprStmt.ASTID => {
                         var checkFieldUsedDirectly = false
@@ -444,14 +452,14 @@ class ReflectionFeature {
                     // check if param trivial string constant
                     if (simpleDefinition(definedBy, body).exists(_.expr.isConst)) {
                       result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
                     }
                     else {
                       definedBy.foreach { defSite =>
                         if (defSite < 0) {
                           // need to check with custom test case
                           result += FeatureContainer("Non-Trivial Reflection (user input (only?))", r.method.name, r.method.declaringClassType.fqn,
-                            pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                            pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
                         }
                       }
                     }
@@ -460,13 +468,13 @@ class ReflectionFeature {
                   else {
                     if (stmt.astID == Assignment.ASTID && fieldGetUsedForNonDirectInvocation) {
                       result += FeatureContainer("Non-Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
                     }
                   }
                 }
 
               }
-            }
+            }  //TODO
 
           }
           case "forName" => {
@@ -477,7 +485,7 @@ class ReflectionFeature {
                 /*case e1: UnsupportedOperationException =>
                   throw new UnsupportedOperationException()*/
                 case e: Exception =>
-                  throw e
+                  throw e //TODO
               }
 
               val pc = y._2
@@ -502,16 +510,16 @@ class ReflectionFeature {
                 val definedBy = call.params.head.asVar.definedBy
                 if (simpleDefinition(definedBy, body).exists(_.expr.isConst)) {
                   result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
                 } else {
                   definedBy.foreach { defSite =>
                     if (defSite < 0) {
                       // need to check with custom test case
                       result += FeatureContainer("Non-Trivial Reflection (user input (only?))", r.method.name, r.method.declaringClassType.fqn,
-                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
                     }
                     else result += FeatureContainer("Non-Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                      pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                      pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
                   }
                 }
 
@@ -586,11 +594,11 @@ class ReflectionFeature {
 
               if (stmt.astID == Assignment.ASTID && checkFieldUsedDirectly) {
                 result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                  pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                  pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
               }
               else if (stmt.astID == Assignment.ASTID && fieldUsedForNonDirectInvocation) {
                 result += FeatureContainer("Non-Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                  pc, linenumber, y._1.name, "", host.fqn, classFileVersion)
+                  pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
               }
 
             }
