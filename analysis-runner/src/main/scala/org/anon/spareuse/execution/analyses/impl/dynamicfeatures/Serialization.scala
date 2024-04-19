@@ -50,17 +50,20 @@ class Serialization {
 
               if (invocation.astID == VirtualMethodCall.ASTID) {
                 val paramVar = invocation.asVirtualMethodCall.params.head.asVar
-                val param = paramVar.value.asReferenceValue
+                if(paramVar.value.isReferenceValue){
+                  val param = paramVar.value.asReferenceValue
 
-                if (project.classHierarchy.isSubtypeOf(param.asReferenceType, ObjectType.Externalizable)) {
-                  result += FeatureContainer("Serialization Externalizable", rm.method.name, rm.method.declaringClassType.fqn,
-                    pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
-                }
 
-                if (!project.classHierarchy.isSubtypeOf(
-                  param.asReferenceType, ObjectType.Externalizable)) {
-                  result += FeatureContainer("Serialization", rm.method.name, rm.method.declaringClassType.fqn,
-                    pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
+                  if (project.classHierarchy.isSubtypeOf(param.asReferenceType, ObjectType.Externalizable)) {
+                    result += FeatureContainer("Serialization Externalizable", rm.method.name, rm.method.declaringClassType.fqn,
+                      pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
+                  }
+
+                  if (!project.classHierarchy.isSubtypeOf(
+                    param.asReferenceType, ObjectType.Externalizable)) {
+                    result += FeatureContainer("Serialization", rm.method.name, rm.method.declaringClassType.fqn,
+                      pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
+                  }
                 }
               }
             }
