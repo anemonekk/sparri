@@ -12,7 +12,7 @@ class StaticInitializer {
 
   var result: Set[FeatureContainer] = Set.empty
 
-  def apply[S](project: Project[S], cg: CallGraph): Set[FeatureContainer] = {
+  def apply[S](project: Project[S], cg: CallGraph, publishedAt: String): Set[FeatureContainer] = {
 
     for ((cf, source) <- project.projectClassFilesWithSources) {
       if (cf.staticInitializer.isDefined) {
@@ -22,7 +22,7 @@ class StaticInitializer {
 
         val si = cf.staticInitializer.get
 
-        result += FeatureContainer("Static Initializer", si.name, si.descriptor.toString(), 1, 1, "static methods: " + staticMethods, "", si.classFile.fqn, si.classFile.jdkVersion, cg.reachableMethods().size)
+        result += FeatureContainer("Static Initializer", si.name, si.descriptor.toString(), 1, 1, "static methods: " + staticMethods, "", si.classFile.fqn, si.classFile.jdkVersion, cg.reachableMethods().size, publishedAt)
       }
     }
     result

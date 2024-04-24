@@ -7,7 +7,7 @@ class Native {
 
   var result: Set[FeatureContainer] = Set.empty
 
-  def apply[S](project: Project[S], cg: CallGraph): Set[FeatureContainer] = {
+  def apply[S](project: Project[S], cg: CallGraph, publishedAt: String): Set[FeatureContainer] = {
 
     val classFileVersion = project.allClassFiles.head.jdkVersion
 
@@ -27,7 +27,7 @@ class Native {
               if(rm.method.hasSingleDefinedMethod){
                 if(rm.method.definedMethod.isNative){
                   result += FeatureContainer("Native", rm.method.name, rm.method.declaringClassType.fqn,
-                    pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
+                    pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size, publishedAt)
                 }
               }
             }

@@ -12,7 +12,7 @@ class DynamicProxy {
 
   var result: Set[FeatureContainer] = Set.empty
 
-  def apply[S](project: Project[S], cg: CallGraph): Set[FeatureContainer] = {
+  def apply[S](project: Project[S], cg: CallGraph, publishedAt: String): Set[FeatureContainer] = {
 
     val classFileVersion = project.allClassFiles.head.jdkVersion
 
@@ -30,7 +30,7 @@ class DynamicProxy {
                 val pc = caller._2
                 val linenumber = caller._1.definedMethod.body.get.lineNumber(pc).get
                 result += FeatureContainer("DP", rm.method.name, rm.method.declaringClassType.fqn,
-                  pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
+                  pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size, publishedAt)
               }
 
             case _ =>

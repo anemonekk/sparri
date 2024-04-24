@@ -8,7 +8,7 @@ class InterfaceMethods {
 
   var result: Set[FeatureContainer] = Set.empty
 
-  def apply[S](project: Project[S], cg: CallGraph): Set[FeatureContainer] = {
+  def apply[S](project: Project[S], cg: CallGraph, publishedAt: String): Set[FeatureContainer] = {
 
     val classFileVersion = project.allClassFiles.head.jdkVersion
 
@@ -40,7 +40,7 @@ class InterfaceMethods {
                             if (target.value.body.isDefined && target.value.isPublic) {
                               if (isIDM) {
                                 result += FeatureContainer("Interface Methods default invoke virtual", rm.method.name, rm.method.declaringClassType.fqn,
-                                  pc, linenumber, caller._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                                  pc, linenumber, caller._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                               }
                             }
                           }
@@ -65,7 +65,7 @@ class InterfaceMethods {
                           if (target.value.body.isDefined && target.value.isPublic) {
                             if(isIDM){
                               result += FeatureContainer("Interface Methods default invoke interface", rm.method.name, rm.method.declaringClassType.fqn,
-                                pc, linenumber, caller._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                                pc, linenumber, caller._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                             }
                           }
                         }
@@ -76,7 +76,7 @@ class InterfaceMethods {
                 case ins: INVOKESTATIC => {
                   if (ins.isInterface) {
                     result += FeatureContainer("Interface Methods static invoke static", rm.method.name, rm.method.declaringClassType.fqn,
-                      pc, linenumber, caller._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                      pc, linenumber, caller._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                   }
                 }
                 case _ =>

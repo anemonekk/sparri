@@ -33,6 +33,8 @@ class DynamicFeatureExtractor extends AnalysisImplementation{
 
           val cg = project.get(RTACallGraphKey)
 
+          val publishedAt = program.publishedAt
+
           val clBuilder: Classloading = new Classloading
           val reflBuilder: ReflectionFeature = new ReflectionFeature
           val dynProxBuilder: DynamicProxy = new DynamicProxy
@@ -44,16 +46,16 @@ class DynamicFeatureExtractor extends AnalysisImplementation{
           val invokedynamicsBuilder: Invokedynamics = new Invokedynamics
           val staticinitializerBuilder: StaticInitializer = new StaticInitializer
 
-          val reflFeatures = reflBuilder.apply(project, cg)
-          val classloadingFeatures = clBuilder.apply(project, cg)
-          val dynamicProxyFeatures = dynProxBuilder.apply(project, cg)
-          val interfaceMethodsFeatures = interfaceMethodsBuiler.apply(project, cg)
-          val methodhandleFeatures = methodhandleBuilder.apply(project, cg)
-          val nativeFeatures = nativeBuilder.apply(project, cg)
-          val unsafeFeatures = unsafeBuilder.apply(project, cg)
-          val serializationFeatures = serializationBuilder.apply(project, cg)
-          val invokedynamicsFeatures = invokedynamicsBuilder.apply(project, cg)
-          val staticInitializerFeatures = staticinitializerBuilder.apply(project, cg)
+          val reflFeatures = reflBuilder.apply(project, cg, publishedAt)
+          val classloadingFeatures = clBuilder.apply(project, cg, publishedAt)
+          val dynamicProxyFeatures = dynProxBuilder.apply(project, cg, publishedAt)
+          val interfaceMethodsFeatures = interfaceMethodsBuiler.apply(project, cg, publishedAt)
+          val methodhandleFeatures = methodhandleBuilder.apply(project, cg, publishedAt)
+          val nativeFeatures = nativeBuilder.apply(project, cg, publishedAt)
+          val unsafeFeatures = unsafeBuilder.apply(project, cg, publishedAt)
+          val serializationFeatures = serializationBuilder.apply(project, cg, publishedAt)
+          val invokedynamicsFeatures = invokedynamicsBuilder.apply(project, cg, publishedAt)
+          val staticInitializerFeatures = staticinitializerBuilder.apply(project, cg, publishedAt)
 
           val mergeFeatures = (reflFeatures ++ classloadingFeatures ++ dynamicProxyFeatures
             ++ interfaceMethodsFeatures ++ methodhandleFeatures ++ nativeFeatures
@@ -85,7 +87,8 @@ object DynamicFeatureExtractor extends AnalysisImplementationDescriptor {
         NamedPropertyFormat("params", formats.StringFormat),
         NamedPropertyFormat("hostClass", formats.StringFormat),
         NamedPropertyFormat("classFileVersion", formats.StringFormat),
-        NamedPropertyFormat("reachableMethods", formats.NumberFormat)
+        NamedPropertyFormat("reachableMethods", formats.NumberFormat),
+        NamedPropertyFormat("jarPublishedAt", formats.StringFormat)
       )
     )
   )

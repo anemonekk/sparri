@@ -18,7 +18,7 @@ class Serialization {
 
   var result: Set[FeatureContainer] = Set.empty
 
-  def apply[S](project: Project[S], cg: CallGraph): Set[FeatureContainer] = {
+  def apply[S](project: Project[S], cg: CallGraph, publishedAt: String): Set[FeatureContainer] = {
 
     val classFileVersion = project.allClassFiles.head.jdkVersion
 
@@ -53,17 +53,26 @@ class Serialization {
                 if(paramVar.value.isReferenceValue){
                   val param = paramVar.value.asReferenceValue
 
+                  //if(paramVar.value.asReferenceValue.asReferenceType.isReferenceType){
+                  //if (param.asReferenceType != null) { //java.lang.ClassCastException: Set().size >= 1
+                  //java.util.NoSuchElementException: None.get
+                  //if (project.classHierarchy.isSubtypeOf(param.leastUpperType.get, ObjectType.Externalizable)) {
+                    //if (project.classHierarchy.isSubtypeOf(param.asReferenceType, ObjectType.Externalizable)) {
+                  if(param.leastUpperType.isDefined){
+                    if (project.classHierarchy.isSubtypeOf(param.leastUpperType.get, ObjectType.Externalizable)) {
+                      result += FeatureContainer("Serialization Externalizable", rm.method.name, rm.method.declaringClassType.fqn,
+                        pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size, publishedAt)
+                    }
 
-                  if (project.classHierarchy.isSubtypeOf(param.asReferenceType, ObjectType.Externalizable)) {
-                    result += FeatureContainer("Serialization Externalizable", rm.method.name, rm.method.declaringClassType.fqn,
-                      pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
+                    //if (!project.classHierarchy.isSubtypeOf(param.asReferenceType, ObjectType.Externalizable)) {
+                    if (!project.classHierarchy.isSubtypeOf(param.leastUpperType.get, ObjectType.Externalizable)) {
+                      result += FeatureContainer("Serialization", rm.method.name, rm.method.declaringClassType.fqn,
+                        pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size, publishedAt)
+                    }
                   }
 
-                  if (!project.classHierarchy.isSubtypeOf(
-                    param.asReferenceType, ObjectType.Externalizable)) {
-                    result += FeatureContainer("Serialization", rm.method.name, rm.method.declaringClassType.fqn,
-                      pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
-                  }
+                 // }
+                  //}
                 }
               }
             }
@@ -105,12 +114,12 @@ class Serialization {
                     }
                   }) {
                     result += FeatureContainer("Serialization", rm.method.name, rm.method.declaringClassType.fqn,
-                      pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
+                      pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size, publishedAt)
                   }
 
                   else if (externalizableTypes.nonEmpty) {
                     result += FeatureContainer("Serialization Externalizable", rm.method.name, rm.method.declaringClassType.fqn,
-                      pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
+                      pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size, publishedAt)
                   }
                 }
               }
@@ -137,7 +146,7 @@ class Serialization {
 
                 if (invocation.astID == VirtualMethodCall.ASTID) {
                   result += FeatureContainer("Serialization", rm.method.name, rm.method.declaringClassType.fqn,
-                    pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size)
+                    pc, linenumber, caller._1.name, "", "", classFileVersion, cg.reachableMethods().size, publishedAt)
                 }
               }
             }

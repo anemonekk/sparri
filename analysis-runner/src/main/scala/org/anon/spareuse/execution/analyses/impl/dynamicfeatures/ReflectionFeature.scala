@@ -33,7 +33,7 @@ class ReflectionFeature {
 
   var result: Set[FeatureContainer] = Set.empty
 
-  def apply[S](project: Project[S], cg: CallGraph): Set[FeatureContainer] = {
+  def apply[S](project: Project[S], cg: CallGraph, publishedAt: String): Set[FeatureContainer] = {
 
     val classFileVersion = project.allClassFiles.head.jdkVersion
 
@@ -88,7 +88,7 @@ class ReflectionFeature {
                 if (call.params.head.asVar.value.isReferenceValue) {
 
                   result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                 }
                 else {
                   //result += FeatureContainer("Trivial Reflection", r.method.name, pc, linenumber)
@@ -106,7 +106,7 @@ class ReflectionFeature {
                           v.isNull.isNoOrUnknown
                         }) {
                           result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                            pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                            pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                         }
                         /*if (paramTypes.asReferenceValue.allValues.exists { v =>
                           if(v.isNull.isNoOrUnknown){
@@ -146,7 +146,7 @@ class ReflectionFeature {
 
                 if (stmt.isVirtualMethodCall) {
                   result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                 }
               }
             }
@@ -163,7 +163,7 @@ class ReflectionFeature {
 
 
               result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
             }
           }
           case "setAccessible" => {}
@@ -178,7 +178,7 @@ class ReflectionFeature {
               val linenumber = y._1.definedMethod.body.get.lineNumber(pc).get
               val host = y._1.definedMethod.classFile
               result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
             }
           }
 
@@ -295,20 +295,20 @@ class ReflectionFeature {
                     // check if param trivial string constant
                     if (simpleDefinition(definedBy, body).exists(_.expr.isConst)) {
                       result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                     }
                     else {
                       definedBy.foreach { defSite =>
                         if (defSite < 0) {
                           result += FeatureContainer("Non-Trivial Reflection (user input(only?))", r.method.name, r.method.declaringClassType.fqn,
-                            pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                            pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                         } else { // maybe irrelevant?
                           //val definitionExpr = body(defSite).asAssignment.expr
                           //if (definitionExpr.isConst) {
                           // test case LRR1, multiple constants
                           //roughly say non-trivial, maybe enhance later
                           result += FeatureContainer("Non-Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                            pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                            pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                           //}
                         }
                       }
@@ -317,7 +317,7 @@ class ReflectionFeature {
                 }
                 else if (stmt.astID == Assignment.ASTID && methodUsedForNonDirectInvocation) {
                   result += FeatureContainer("Non-Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                    pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                 }
               }
             }
@@ -457,14 +457,14 @@ class ReflectionFeature {
                     // check if param trivial string constant
                     if (simpleDefinition(definedBy, body).exists(_.expr.isConst)) {
                       result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                     }
                     else {
                       definedBy.foreach { defSite =>
                         if (defSite < 0) {
                           // need to check with custom test case
                           result += FeatureContainer("Non-Trivial Reflection (user input (only?))", r.method.name, r.method.declaringClassType.fqn,
-                            pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                            pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                         }
                       }
                     }
@@ -473,7 +473,7 @@ class ReflectionFeature {
                   else {
                     if (stmt.astID == Assignment.ASTID && fieldGetUsedForNonDirectInvocation) {
                       result += FeatureContainer("Non-Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                     }
                   }
                 }
@@ -522,16 +522,16 @@ class ReflectionFeature {
                     val definedBy = call.params.head.asVar.definedBy
                     if (simpleDefinition(definedBy, body).exists(_.expr.isConst)) {
                       result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                     } else {
                       definedBy.foreach { defSite =>
                         if (defSite < 0) {
                           // need to check with custom test case
                           result += FeatureContainer("Non-Trivial Reflection (user input (only?))", r.method.name, r.method.declaringClassType.fqn,
-                            pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                            pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                         }
                         else result += FeatureContainer("Non-Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                          pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                          pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                       }
                     }
                   }
@@ -610,11 +610,11 @@ class ReflectionFeature {
 
                     if (stmt.astID == Assignment.ASTID && checkFieldUsedDirectly) {
                       result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                     }
                     else if (stmt.astID == Assignment.ASTID && fieldUsedForNonDirectInvocation) {
                       result += FeatureContainer("Non-Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
-                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size)
+                        pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
                     }
                   }
                 }
