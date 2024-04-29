@@ -58,7 +58,11 @@ class ReflectionFeature {
               }
 
               val pc = y._2
-              val linenumber = y._1.definedMethod.body.get.lineNumber(pc).get
+              var linenumber = 0
+              if (y._1.definedMethod.body.get.lineNumber(pc).isDefined) {
+                linenumber = y._1.definedMethod.body.get.lineNumber(pc).get
+              }
+
               val host = y._1.definedMethod.classFile
               implicit val body: Array[Stmt[V]] = tacApplied.stmts
               val index = tacApplied.properStmtIndexForPC(pc)
@@ -158,9 +162,15 @@ class ReflectionFeature {
             for (y <- cg.callersOf(r.method)) {
 
               val pc = y._2
-              val linenumber = y._1.definedMethod.body.get.lineNumber(pc).get
-              val host = y._1.definedMethod.classFile
+              var linenumber = 0
+              if (y._1.definedMethod.body.get.lineNumber(pc).isDefined) {
+                linenumber = y._1.definedMethod.body.get.lineNumber(pc).get
+              }
+              else{
+                linenumber = 0
+              }
 
+              val host = y._1.definedMethod.classFile
 
               result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
                 pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
@@ -175,7 +185,11 @@ class ReflectionFeature {
             for (y <- cg.callersOf(r.method)) {
 
               val pc = y._2
-              val linenumber = y._1.definedMethod.body.get.lineNumber(pc).get
+              var linenumber = 0
+              if (y._1.definedMethod.body.get.lineNumber(pc).isDefined) {
+                linenumber = y._1.definedMethod.body.get.lineNumber(pc).get
+              }
+
               val host = y._1.definedMethod.classFile
               result += FeatureContainer("Trivial Reflection", r.method.name, r.method.declaringClassType.fqn,
                 pc, linenumber, y._1.name, "", host.fqn, classFileVersion, cg.reachableMethods().size, publishedAt)
@@ -194,7 +208,14 @@ class ReflectionFeature {
               }
 
               val pc = y._2
-              val linenumber = y._1.definedMethod.body.get.lineNumber(pc).get
+              var linenumber = 0
+              if (y._1.definedMethod.body.get.lineNumber(pc).isDefined) {
+                linenumber = y._1.definedMethod.body.get.lineNumber(pc).get
+              }
+              else{
+                linenumber = 0
+              }
+
               val host = y._1.definedMethod.classFile
 
               implicit val body: Array[Stmt[V]] = tacApplied4.stmts
@@ -334,7 +355,11 @@ class ReflectionFeature {
               }
 
               val pc = y._2
-              val linenumber = y._1.definedMethod.body.get.lineNumber(pc).get
+              var linenumber = 0
+              if (y._1.definedMethod.body.get.lineNumber(pc).isDefined) {
+                linenumber = y._1.definedMethod.body.get.lineNumber(pc).get
+              }
+
               val host = y._1.definedMethod.classFile
               implicit val body: Array[Stmt[V]] = tacApplied.stmts
               val index = tacApplied.properStmtIndexForPC(pc)
